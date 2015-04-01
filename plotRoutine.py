@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
 """
-Created on Wed Apr 01 15:50:27 2015
-
-Majority of plotting comes from 
-@author: TMM
+Adapted (stolen) from http://www.astrobetter.com/visualization-fun-with-python-2d-histogram-with-1d-histograms-on-axes/
+Thanks Jess K!
 """
 
 import numpy as np
@@ -14,27 +11,23 @@ plt.ion()
  
 # Define a function to make the ellipses
 def ellipse(ra,rb,ang,x0,y0,Nb=100):
-    xpos,ypos=x0,y0
-    radm,radn=ra,rb
-    an=ang
-    co,si=np.cos(an),np.sin(an)
-    the=linspace(0,2*np.pi,Nb)
-    X=radm*np.cos(the)*co-si*radn*np.sin(the)+xpos
-    Y=radm*np.cos(the)*si+co*radn*np.sin(the)+ypos
-    return X,Y
+    xpos, ypos = x0, y0
+    radm, radn = ra, rb
+    an = ang
+    co, si = np.cos(an), np.sin(an)
+    the = linspace(0,2*np.pi,Nb)
+    X = radm * np.cos(the) * co - si * radn * np.sin(the) + xpos
+    Y = radm * np.cos(the) * si + co * radn * np.sin(the) + ypos
+    return X, Y
 
-def plotter(beamx, beamy):
-    """
-    Adapted from http://www.astrobetter.com/visualization-fun-with-python-2d-histogram-with-1d-histograms-on-axes/
-    Thanks Jess K!
-    """
+def plotter(x, y, bin_size, grid_size, fiber_size):
     # Set up default x and y limits
-    xlims = [np.min(beamx),np.max(beamx)]
-    ylims = [np.min(beamy),np.max(beamy)]
+    xlims = [np.min(x),np.max(x)]
+    ylims = [np.min(y),np.max(y)]
      
     # Set up your x and y labels
-    xlabel = '$\mathrm{Your\\ X\\ Label}$'
-    ylabel = '$\mathrm{Your\\ Y\\ Label}$'
+    xlabel = '$\mathrm{pixels}$'
+    ylabel = '$\mathrm{pixels}$'
      
     # Define the locations for the axes
     left, width = 0.12, 0.55
@@ -63,7 +56,7 @@ def plotter(beamx, beamy):
     xmin = np.min(xlims)
     xmax = np.max(xlims)
     ymin = np.min(ylims)
-    ymax = np.max(beamy)
+    ymax = np.max(y)
      
     # Make the 'main' temperature plot
     # Define the number of bins
@@ -77,7 +70,7 @@ def plotter(beamx, beamy):
     ycenter = (ybins[0:-1]+ybins[1:])/2.0
     aspectratio = 1.0*(xmax - 0)/(1.0*ymax - 0)
      
-    H, xedges,yedges = np.histogram2d(beamx,beamy,bins=(xbins,ybins))
+    H, xedges,yedges = np.histogram2d(x,y,bins=(xbins,ybins))
     X = xcenter
     Y = ycenter
     Z = H
@@ -88,10 +81,10 @@ def plotter(beamx, beamy):
      
     # Plot the temperature plot contours
     contourcolor = 'white'
-    xcenter = np.mean(beamx)
-    ycenter = np.mean(beamy)
-    ra = np.std(beamx)
-    rb = np.std(beamy)
+    xcenter = np.mean(x)
+    ycenter = np.mean(y)
+    ra = np.std(x)
+    rb = np.std(y)
     ang = 0
      
     X,Y=ellipse(ra,rb,ang,xcenter,ycenter)
@@ -136,12 +129,12 @@ def plotter(beamx, beamy):
     ybins = np.arange(ymin, ymax, (ymax-ymin)/nbins)
      
     #Plot the histograms
-    axHistx.hist(beamx, bins=xbins, color = 'blue')
-    axHisty.hist(beamy, bins=ybins, orientation='horizontal', color = 'red')
+    axHistx.hist(x, bins=xbins, color = 'blue')
+    axHisty.hist(y, bins=ybins, orientation='horizontal', color = 'red')
      
     #Set up the histogram limits
-    axHistx.set_xlim( np.min(beamx), np.max(beamx) )
-    axHisty.set_ylim( np.min(beamy), np.max(beamy) )
+    axHistx.set_xlim( np.min(x), np.max(x) )
+    axHisty.set_ylim( np.min(y), np.max(y) )
      
     #Make the tickmarks pretty
     ticklabels = axHistx.get_yticklabels()
