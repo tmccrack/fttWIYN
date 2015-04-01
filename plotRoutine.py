@@ -20,10 +20,10 @@ def ellipse(ra,rb,ang,x0,y0,Nb=100):
     Y = radm * np.cos(the) * si + co * radn * np.sin(the) + ypos
     return X, Y
 
-def plotter(x, y, bin_size, grid_size, fiber_size):
+def plotter(x, y, n_pix, pixel_size, grid_size, fiber_size):
     # Set up default x and y limits
-    xlims = [np.min(x),np.max(x)]
-    ylims = [np.min(y),np.max(y)]
+    xlims = [-(np_pix/2.0), (n_pix/2.0)] * pixel_size
+    ylims = [-(np_pix/2.0), (n_pix/2.0)] * pixel_size
      
     # Set up your x and y labels
     xlabel = '$\mathrm{pixels}$'
@@ -70,7 +70,7 @@ def plotter(x, y, bin_size, grid_size, fiber_size):
     ycenter = (ybins[0:-1]+ybins[1:])/2.0
     aspectratio = 1.0*(xmax - 0)/(1.0*ymax - 0)
      
-    H, xedges,yedges = np.histogram2d(x,y,bins=(xbins,ybins))
+    H, xedges,yedges = np.histogram2d(x, y, pixel_size))
     X = xcenter
     Y = ycenter
     Z = H
