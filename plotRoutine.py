@@ -6,8 +6,26 @@ Thanks Jess K!
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter, MaxNLocator
-from numpy import linspace
 plt.ion()
+
+def binner(x, y, n_bins, bin_size):
+    xlims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)] 
+    ylims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)]
+    data, xedges, yedges = np.histogram2d(x, y, n_bins, range=[xlims, ylims])
+    return data, xedges, yedges
+    
+    
+def fiber_mask(fiber_diameter, n_bins, bin_size):
+    """
+    Returns centered circular fiber mask
+    """
+    r = fiber_diameter / 2.0 / bin_size;
+    x, y = np.ogrid[0:n_bins/2, 0:n_bins/2]
+    mask = (x*x + y*y >= r*r).astype(int)  # 1/4 of mask, must concatenate
+    mask = np.column_stack((np.fliplr(mask), mask))  # 1/2 of mask
+    mask = np.vstack((np.flipud(mask), mask))  # all of mask
+    return mask
+    
  
 # Define a function to make the ellipses
 def ellipse(ra,rb,ang,x0,y0,Nb=100):
@@ -25,10 +43,6 @@ def plotter(x, y, n_pix, pixel_size, grid_size, fiber_size):
     xlims = [-(np_pix/2.0), (n_pix/2.0)] * pixel_size
     ylims = [-(np_pix/2.0), (n_pix/2.0)] * pixel_size
      
-    # Set up your x and y labels
-    xlabel = '$\mathrm{pixels}$'
-    ylabel = '$\mathrm{pixels}$'
-     
     # Define the locations for the axes
     left, width = 0.12, 0.55
     bottom, height = 0.12, 0.55
@@ -42,6 +56,29 @@ def plotter(x, y, n_pix, pixel_size, grid_size, fiber_size):
     # Set up the size of the figure
     fig = plt.figure(1, figsize=(9.5,9))
      
+    # Find the min/max of the data
+    xmin = np.min(xlims)
+    xmax = np.max(xlims)
+    ymin = np.min(ylims)
+    ymax = np.max(ylims)
+     
+    # Make the 'main' temperature plot
+    # Define the number of bins
+    nxbins = 50
+    nybins = 50
+    nbins = 100
+     
+    xbins = np.linspace(start = xmin, stop = xmax, num = nxbins)
+    ybins = np.linspace(start = ymin, stop = ymax, num = nybins)
+    xcenter = (xbins[0:-1]+xbins[1:])/2.0
+    ycenter = (ybins[0:-1]+ybins[1:])/2.0
+    aspectratio = 1.0*(xmax - 0)/(1.0*ymax - 0)
+     
+    H, xedges,yedges = np.histogram2d(x, y, pixel_size)
+    X = xcenter
+    Y = ycenter
+    Z = H
+    
     # Make the three plots
     axTemperature = plt.axes(rect_temperature) # temperature plot
     axHistx = plt.axes(rect_histx) # x histogram
@@ -51,29 +88,6 @@ def plotter(x, y, n_pix, pixel_size, grid_size, fiber_size):
     nullfmt = NullFormatter()
     axHistx.xaxis.set_major_formatter(nullfmt)
     axHisty.yaxis.set_major_formatter(nullfmt)
-     
-    # Find the min/max of the data
-    xmin = np.min(xlims)
-    xmax = np.max(xlims)
-    ymin = np.min(ylims)
-    ymax = np.max(y)
-     
-    # Make the 'main' temperature plot
-    # Define the number of bins
-    nxbins = 50
-    nybins = 50
-    nbins = 100
-     
-    xbins = linspace(start = xmin, stop = xmax, num = nxbins)
-    ybins = linspace(start = ymin, stop = ymax, num = nybins)
-    xcenter = (xbins[0:-1]+xbins[1:])/2.0
-    ycenter = (ybins[0:-1]+ybins[1:])/2.0
-    aspectratio = 1.0*(xmax - 0)/(1.0*ymax - 0)
-     
-    H, xedges,yedges = np.histogram2d(x, y, pixel_size))
-    X = xcenter
-    Y = ycenter
-    Z = H
      
     # Plot the temperature data
     cax = (axTemperature.imshow(H, extent=[xmin,xmax,ymin,ymax],
