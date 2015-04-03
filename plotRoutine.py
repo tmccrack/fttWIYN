@@ -1,5 +1,5 @@
 """
-Adapted (stolen) from http://www.astrobetter.com/visualization-fun-with-python-2d-histogram-with-1d-histograms-on-axes/
+Adapted from http://www.astrobetter.com/visualization-fun-with-python-2d-histogram-with-1d-histograms-on-axes/
 Thanks Jess K!
 """
 
@@ -8,11 +8,31 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter, MaxNLocator
 plt.ion()
 
+
 def binner(x, y, n_bins, bin_size):
+    """
+    Bin random x and y data into array (n_bins, n_bins)
+    """
     xlims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)] 
     ylims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)]
     data, xedges, yedges = np.histogram2d(x, y, n_bins, range=[xlims, ylims])
     return data, xedges, yedges
+
+
+def detector_bin(data, n_pix):
+    """
+    Take data array and bin/sum into array of (n_pix, n_pix)
+    """
+    assert (np.mod(data.shape[0], n_pix) == 0) & (np.mod(data.shape[1], n_pix) == 0)
+    shape = n_pix, data.shape[0]//n_pix, n_pix, data.shape[1]//n_pix
+    return data.reshape(shape).sum(-1).sum(1)
+
+    
+def add_noise(size, noise):
+    """
+    Return array (size, size) with random noise at the specified level.
+    """
+    return np.zeros((size, size))
     
     
 def fiber_mask(fiber_radius, n_bins, bin_size):
@@ -37,6 +57,7 @@ def ellipse(ra,rb,ang,x0,y0,Nb=100):
     X = radm * np.cos(the) * co - si * radn * np.sin(the) + xpos
     Y = radm * np.cos(the) * si + co * radn * np.sin(the) + ypos
     return X, Y
+
 
 def plotter(x, y, n_pix, pixel_size, grid_size, fiber_size):
     # Set up default x and y limits
