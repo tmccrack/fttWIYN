@@ -36,6 +36,21 @@ n_photons = 10000.0
 x = norm.rvs(loc=0.0, scale=sigma, size=n_photons)
 y = norm.rvs(loc=0.0, scale=sigma, size=n_photons)
 
+# Create histogram and kill center value used for mathcing arrays
+
+"""
+Bin for detector
+"""
+n_bins = 500
+bin_size = field / n_bins
+xlims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)]
+ylims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)]
+
+ym, xm = np.ogrid[-fiber_radius:fiber_radius, -fiber_radius:fiber_radius]
+mask = plotRoutine.fiber_mask(fiber_radius, n_bins, bin_size)
+H, xedges, yedges = np.histogram2d(x, y, bins=n_bins, range=[xlims, ylims])
+
+'''
 # Mask for fiber
 x_masked = ma.masked_inside(x, -fiber_radius, fiber_radius).compressed()
 y_masked = ma.masked_inside(y, -fiber_radius, fiber_radius).compressed()
@@ -47,22 +62,16 @@ y=np.zeros(n_photons)
 y[0:len(y_masked)] = y_masked
 
 
-"""
-Bin for detector
-"""
-n_bins = 500
-bin_size = field / n_bins
-xlims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)]
-ylims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)]
 
-# Create histogram and kill center value used for mathcing arrays
-H, xedges, yedges = np.histogram2d(x, y, bins=n_bins, range=[xlims, ylims])
 H[n_bins/2, n_bins/2] = 0 
-
+'''
 
 #plt.imshow(data)
 #plt.figure()
-plt.imshow(H, interpolation='none')
+plt.imshow(H * mask, interpolation='none')
+figure()
+plt.imshow(mask)
+plt.colorbar()
 
 
 
