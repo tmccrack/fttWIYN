@@ -15,11 +15,11 @@ def binner(x, y, n_bins, bin_size):
     return data, xedges, yedges
     
     
-def fiber_mask(fiber_diameter, n_bins, bin_size):
+def fiber_mask(fiber_radius, n_bins, bin_size):
     """
     Returns centered circular fiber mask
     """
-    r = fiber_diameter / 2.0 / bin_size;
+    r = fiber_radius / bin_size;
     x, y = np.ogrid[0:n_bins/2, 0:n_bins/2]
     mask = (x*x + y*y >= r*r).astype(int)  # 1/4 of mask, must concatenate
     mask = np.column_stack((np.fliplr(mask), mask))  # 1/2 of mask
