@@ -13,12 +13,8 @@ def centroid(data, x, y):
     """
     Determine centroid of 2D data array with values located at x, y
     """
-    xc = 0
-    yc = 0
-    for n in range(data.shape[0]):
-        for m in range(data.shape[1]):
-          xc = xc + x[n] * data[n,m]
-          yc = yc + y[m] * data[n,m]
+    xc = np.dot(x, np.sum(data, axis=1))
+    yc = np.dot(y, np.sum(data, axis=0))
     total = np.sum(np.sum(data))      
     return xc/total, yc/total
 
