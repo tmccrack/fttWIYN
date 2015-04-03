@@ -12,7 +12,7 @@ from scipy.stats import norm
 from numpy import ma
 
 field = 10.0  # [arcsecs]
-pixel_size = 0.5  # [arcsecs] 
+pixel_size = 5  # [arcsecs] 
 
 """
 Specifying the spot size and fiber size. Fiber sized to 1/e (37% of peak) or 1/e2 (13.5% of peak).
@@ -24,15 +24,25 @@ fiber_radius = 0.45  # 1/e radius [arcsecs]
 sigma = fwhm / 2.3458  # [arcsecs]
 mu = 0.0  # [arcsecs]
 
+
 """
 Source and integration time to get number of photons.
 Set up distributions to for binning.
 """
 magnitude = 0.0  # TODO
-n_photons = 10000.0
+diameter = 3.5  # [m]
+wavelength = 635  # [nm]
+bandpass = 880 - 390  # [nm]
+extinction = 0.5  # Extinction in magnitudes per airmass
+transmission = 0.72
+qe = 0.9
+fiber_rejection = 0.16
+
+n_photons = source_photons(bandpass, wavelength, m, diameter, extinction) * qe * fiber_rejection * transmission
+
 
 # Generate random photons
-x = norm.rvs(loc=0.0, scale=sigma, size=n_photons)
+x = norm.rvs(loc=0.050, scale=sigma, size=n_photons)
 y = norm.rvs(loc=0.0, scale=sigma, size=n_photons)
 
 """
@@ -57,8 +67,9 @@ ydet_edges = yedges[::bins_per_pix]  # [arcsecs]
 level = 0
 detector = plotRoutine.detector_bin(H, n_pix) + plotRoutine.add_noise(n_pix, level)
 
-# Pop last value from edge arrays, not necessary. Add half a pixel to center 
+# Pop last value from edge arrays, not necessary
 xc, yc = plotRoutine.centroid(detector, xdet_edges[:-1], ydet_edges[:-1])
+# Centroid assumes x,y center of pixels, add half pixel to offset
 xc += pixel_size / 2.0
 yc += pixel_size / 2.0
 print(xc, yc)
