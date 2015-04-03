@@ -9,6 +9,19 @@ from matplotlib.ticker import NullFormatter, MaxNLocator
 plt.ion()
 
 
+def centroid(data, x, y):
+    """
+    Determine centroid of 2D data array with values located at x, y
+    """
+    xc = 0
+    yc = 0
+    for n in range(data.shape[0]):
+        for m in range(data.shape[1]):
+          xc = xc + x[n] * data[n,m]
+          yc = yc + y[m] * data[n,m]
+    total = np.sum(np.sum(data))      
+    return xc/total, yc/total
+
 def binner(x, y, n_bins, bin_size):
     """
     Bin random x and y data into array (n_bins, n_bins)
@@ -53,7 +66,7 @@ def ellipse(ra,rb,ang,x0,y0,Nb=100):
     radm, radn = ra, rb
     an = ang
     co, si = np.cos(an), np.sin(an)
-    the = linspace(0,2*np.pi,Nb)
+    the = np.linspace(0,2*np.pi,Nb)
     X = radm * np.cos(the) * co - si * radn * np.sin(the) + xpos
     Y = radm * np.cos(the) * si + co * radn * np.sin(the) + ypos
     return X, Y
