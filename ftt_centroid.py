@@ -12,8 +12,7 @@ from scipy.stats import norm
 from numpy import ma
 
 field = 10.0  # [arcsecs]
-pixel_size = 10.0  # [arcsecs] 
-grid_size = 1000.  # points on the grid
+pixel_size = 0.1  # [arcsecs] 
 
 """
 Specifying the spot size and fiber size. Fiber sized to 1/e (37% of peak) or 1/e2 (13.5% of peak).
@@ -36,41 +35,27 @@ n_photons = 10000.0
 x = norm.rvs(loc=0.0, scale=sigma, size=n_photons)
 y = norm.rvs(loc=0.0, scale=sigma, size=n_photons)
 
-# Create histogram and kill center value used for mathcing arrays
-
 """
-Bin for detector
+Fine binning
 """
 n_bins = 500
 bin_size = field / n_bins
 xlims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)]
 ylims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)]
 
-ym, xm = np.ogrid[-fiber_radius:fiber_radius, -fiber_radius:fiber_radius]
+# Mask focal plane
 mask = plotRoutine.fiber_mask(fiber_radius, n_bins, bin_size)
 H, xedges, yedges = np.histogram2d(x, y, bins=n_bins, range=[xlims, ylims])
+H = H * mask
 
-'''
-# Mask for fiber
-x_masked = ma.masked_inside(x, -fiber_radius, fiber_radius).compressed()
-y_masked = ma.masked_inside(y, -fiber_radius, fiber_radius).compressed()
-
-# Adjust length for histogram
-x = np.zeros(n_photons)
-x[0:len(x_masked)] = x_masked
-y=np.zeros(n_photons)
-y[0:len(y_masked)] = y_masked
-
-
-
-H[n_bins/2, n_bins/2] = 0 
-'''
+n_pix = field / pixel_size
+detector = plotRoutine.detector_bin(H, n_pix) + plotRoutine.add_noise(n_pix)
 
 #plt.imshow(data)
 #plt.figure()
 plt.imshow(H * mask, interpolation='none')
 figure()
-plt.imshow(mask)
+plt.imshow(detector, interpolation='none')
 plt.colorbar()
 
 
