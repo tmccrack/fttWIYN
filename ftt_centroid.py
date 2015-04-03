@@ -11,25 +11,11 @@ import plotRoutine
 from scipy.stats import norm
 from numpy import ma
 
-field = 10.0  # [arcsecs]
-pixel_size = 5  # [arcsecs] 
 
 """
-Specifying the spot size and fiber size. Fiber sized to 1/e (37% of peak) or 1/e2 (13.5% of peak).
-These values are beam radius though, need diameter.
-TODO: calculate 1/e diameter
+Instrument and source properties
 """
-fwhm = 0.76  # fwhm of beam [arcsecs]
-fiber_radius = 0.45  # 1/e radius [arcsecs]
-sigma = fwhm / 2.3458  # [arcsecs]
-mu = 0.0  # [arcsecs]
-
-
-"""
-Source and integration time to get number of photons.
-Set up distributions to for binning.
-"""
-magnitude = 0.0  # TODO
+magnitude = np.arange(10.0, 16.0)  # TODO
 diameter = 3.5  # [m]
 wavelength = 635  # [nm]
 bandpass = 880 - 390  # [nm]
@@ -37,45 +23,70 @@ extinction = 0.5  # Extinction in magnitudes per airmass
 transmission = 0.72
 qe = 0.9
 fiber_rejection = 0.16
+integration_time = 0.01  # [seconds]
 
-n_photons = source_photons(bandpass, wavelength, m, diameter, extinction) * qe * fiber_rejection * transmission
 
-
-# Generate random photons
-x = norm.rvs(loc=0.050, scale=sigma, size=n_photons)
-y = norm.rvs(loc=0.0, scale=sigma, size=n_photons)
+#n_photons = 10000
 
 """
-Fine binning
+Detector and fiber properties
 """
-n_bins = 500
+field = 10.0  # [arcsecs]
+pixel_size = 0.50  # [arcsecs] 
+fwhm = 0.76  # fwhm of beam [arcsecs]
+fiber_radius = 0.45  # 1/e radius [arcsecs]
+sigma = fwhm / 2.3458  # [arcsecs]
+mux = 0.05  # [arcsecs]
+muy = 0.0  # [arcsecs]
+noise_level = 0
+
+
+"""
+Fiber mask, binning parameters
+"""
+n_bins = 500  # Grid to be binned into detector
 bin_size = field / n_bins
+mask = plotRoutine.fiber_mask(fiber_radius, n_bins, bin_size)
 xlims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)]
 ylims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)]
-mask = plotRoutine.fiber_mask(fiber_radius, n_bins, bin_size)
-H, xedges, yedges = np.histogram2d(x, y, bins=n_bins, range=[xlims, ylims])
-H = H * mask
 
-"""
-Detector binning
-"""
-n_pix = field / pixel_size
+n_pix = field / pixel_size  # Detector pixels
 bins_per_pix = n_bins / n_pix
 # Pixel edges on detector
+xedges = np.linspace(xlims[0], xlims[1], n_bins+1)
+yedges = np.linspace(xlims[0], xlims[1], n_bins+1)
 xdet_edges = xedges[::bins_per_pix]  # [arcsecs]
 ydet_edges = yedges[::bins_per_pix]  # [arcsecs]
-level = 0
-detector = plotRoutine.detector_bin(H, n_pix) + plotRoutine.add_noise(n_pix, level)
 
-# Pop last value from edge arrays, not necessary
-xc, yc = plotRoutine.centroid(detector, xdet_edges[:-1], ydet_edges[:-1])
-# Centroid assumes x,y center of pixels, add half pixel to offset
-xc += pixel_size / 2.0
-yc += pixel_size / 2.0
-print(xc, yc)
 
-plt.imshow(H * mask, interpolation='none')
-figure()
-plt.imshow(detector, interpolation='none')
-plt.colorbar()
+"""
+Realizations
+"""
+err = np.zeros((len(magnitude), 2))
+for m in range(len(magnitude)):
+    n_photons = plotRoutine.source_photons(bandpass, wavelength, magnitude[m], diameter, extinction) * qe * fiber_rejection * transmission * integration_time    
+    err2 = np.zeros(1000)
+    
+    for n in range(1000):
+        # Generate random photons
+        x = norm.rvs(loc=mux, scale=sigma, size=n_photons)
+        y = norm.rvs(loc=muy, scale=sigma, size=n_photons)
+        # Bin into 
+        H, xedges, yedges = np.histogram2d(x, y, bins=n_bins, range=[xlims, ylims])
+        H = H * mask
+        
+        detector = plotRoutine.detector_bin(H, n_pix) + plotRoutine.add_noise(n_pix, noise_level)
+    
+        """
+        Centroid and error
+        """
+        # Pop last value from edge arrays, not necessary
+        xc, yc = plotRoutine.centroid(detector, xdet_edges[:-1], ydet_edges[:-1])
+        # Centroid assumes x,y center of pixels, add half pixel to offset
+        xc += pixel_size / 2.0
+        yc += pixel_size / 2.0
+        err2[n] = np.sqrt((xc-mux)**2 + (yc-muy)**2)
+        
+    err[m,:] = [np.std(err2), np.mean(err2)]
 
+plt.plot(magnitude, err[:,1])
