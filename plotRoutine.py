@@ -56,6 +56,15 @@ def fiber_mask(fiber_radius, n_bins, bin_size):
     return mask
     
  
+def source_photons(bandpass, wavelength, magnitude, diameter, extinction):
+    """
+    Number of photons collected per second by a telescope given diameter from source of given magnitude
+    Adopted from Massey et al. 1988
+    Specify bandpass and mean wavelength of observation
+    Does not assume transmission or detector efficiency
+    """
+    return floor(4.5e10 / wavelength * 10**(-(magnitude + extinction) / 2.5) * diameter**2 * bandpass) 
+ 
 # Define a function to make the ellipses
 def ellipse(ra,rb,ang,x0,y0,Nb=100):
     xpos, ypos = x0, y0
