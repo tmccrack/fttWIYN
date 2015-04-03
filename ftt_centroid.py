@@ -12,7 +12,7 @@ from scipy.stats import norm
 from numpy import ma
 
 field = 10.0  # [arcsecs]
-pixel_size = 0.1  # [arcsecs] 
+pixel_size = 0.5  # [arcsecs] 
 
 """
 Specifying the spot size and fiber size. Fiber sized to 1/e (37% of peak) or 1/e2 (13.5% of peak).
@@ -42,25 +42,29 @@ n_bins = 500
 bin_size = field / n_bins
 xlims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)]
 ylims = [-(n_bins/2.0 * bin_size), (n_bins/2.0 * bin_size)]
-
-# Mask focal plane
 mask = plotRoutine.fiber_mask(fiber_radius, n_bins, bin_size)
 H, xedges, yedges = np.histogram2d(x, y, bins=n_bins, range=[xlims, ylims])
 H = H * mask
 
+"""
+Detector binning
+"""
 n_pix = field / pixel_size
-detector = plotRoutine.detector_bin(H, n_pix) + plotRoutine.add_noise(n_pix)
+bins_per_pix = n_bins / n_pix
+# Pixel edges on detector
+xdet_edges = xedges[::bins_per_pix]  # [arcsecs]
+ydet_edges = yedges[::bins_per_pix]  # [arcsecs]
+level = 0
+detector = plotRoutine.detector_bin(H, n_pix) + plotRoutine.add_noise(n_pix, level)
 
-#plt.imshow(data)
-#plt.figure()
+# Pop last value from edge arrays, not necessary. Add half a pixel to center 
+xc, yc = plotRoutine.centroid(detector, xdet_edges[:-1], ydet_edges[:-1])
+xc += pixel_size / 2.0
+yc += pixel_size / 2.0
+print(xc, yc)
+
 plt.imshow(H * mask, interpolation='none')
 figure()
 plt.imshow(detector, interpolation='none')
 plt.colorbar()
 
-
-
-'''
-mask = plotRoutine.fiber_mask(fiber_radius, n_bins, bin_size)
-data, x1, y2 = plotRoutine.binner(x, y, n_bins, bin_size)
-'''
