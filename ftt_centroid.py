@@ -69,8 +69,12 @@ for m in range(len(magnitude)):
     
     for n in range(1000):
         # Generate random photons
-        x = norm.rvs(loc=mux, scale=sigma, size=n_photons)
-        y = norm.rvs(loc=muy, scale=sigma, size=n_photons)
+        # Dominate error in EMCCDs is multiplicative error in gain stage
+        # Gain factor adds sqrt(2) to the shot noise
+        # Accomodate by multiplying n_photons by sqrt(2)
+        gain_noise_photons = n_photons + norm.rvs(loc=0.0, scale=np.sqrt(2), size=1)
+        x = norm.rvs(loc=mux, scale=sigma, size=gain_noise_photons)
+        y = norm.rvs(loc=muy, scale=sigma, size=gain_noise_photons)
         # Bin into 
         H, xedges, yedges = np.histogram2d(x, y, bins=n_bins, range=[xlims, ylims])
         H = H * mask
