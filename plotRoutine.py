@@ -36,12 +36,15 @@ def detector_bin(data, n_pix):
     shape = n_pix, data.shape[0]//n_pix, n_pix, data.shape[1]//n_pix
     return data.reshape(shape).sum(-1).sum(1)
 
-    
-def add_noise(dimension, noise):
+
+def add_poisson_noise(dimension, noise):
+    return np.random.poisson(lam=noise, size=dimensoin**2).reshape(dimension, dimension)
+
+def add_gaussian_noise(dimension, noise):
     """
     Return array (size, size) with random noise at the specified level.
     """
-    return np.random.normal(loc=0.0, scale=noise, size=dimension**2).reshape(dimension, dimension)
+    return np.random.normal(loc=noise, scale=1.0, size=dimension**2).reshape(dimension, dimension)
     
     
 def fiber_mask(fiber_radius, n_bins, bin_size):
