@@ -16,7 +16,7 @@ from numpy import ma
 Instrument and source properties
 """
 #magnitude = np.arange(10.0, 16.0)  # TODO
-magnitude = 15.0
+magnitude = 10.0
 diameter = 3.5  # [m]
 wavelength = 635  # [nm]
 bandpass = 880 - 390  # [nm]
@@ -38,7 +38,7 @@ fwhm = 0.76  # fwhm of beam [arcsecs]
 fiber_radius = 0.45  # 1/e radius [arcsecs]
 sigma = fwhm / 2.3458  # [arcsecs]
 mux = 0.05  # [arcsecs]
-muy = 0.05  # [arcsecs]
+muy = 0.0  # [arcsecs]
 noise_level = 0
 
 
@@ -63,7 +63,8 @@ Realizations
 """
 err = np.zeros((len(pixel_size), 2))
 for m in range(len(pixel_size)):
-    n_photons = plotRoutine.source_photons(bandpass, wavelength, magnitude, diameter, extinction) * qe * fiber_rejection * transmission * integration_time    
+    # Do not take fiber rejection, taken up in mask
+    n_photons = plotRoutine.source_photons(bandpass, wavelength, magnitude, diameter, extinction) * qe * transmission * integration_time    
     
     n_pix = field / pixel_size[m]  # Detector pixels
     bins_per_pix = n_bins / n_pix
