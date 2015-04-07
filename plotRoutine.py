@@ -32,7 +32,7 @@ def detector_bin(data, n_pix):
     """
     Take data array and bin/sum into array of (n_pix, n_pix)
     """
-    assert (np.mod(data.shape[0], n_pix) == 0) & (np.mod(data.shape[1], n_pix) == 0)
+    assert (np.mod(data.shape[0], n_pix) == 0) & (np.mod(data.shape[1], n_pix) == 0), "Non-integer number of bins per pixel."
     shape = n_pix, data.shape[0]//n_pix, n_pix, data.shape[1]//n_pix
     return data.reshape(shape).sum(-1).sum(1)
 
@@ -51,7 +51,9 @@ def fiber_mask(fiber_radius, n_bins, bin_size):
     """
     Returns centered circular fiber mask
     """
+    assert n_bins%2 == 0, "Number of bins in fiber mask must be even."
     r = fiber_radius / bin_size;
+    # Check if bin size is even or odd
     x, y = np.ogrid[0:n_bins/2, 0:n_bins/2]
     mask = (x*x + y*y >= r*r).astype(int)  # 1/4 of mask, must concatenate
     mask = np.column_stack((np.fliplr(mask), mask))  # 1/2 of mask
