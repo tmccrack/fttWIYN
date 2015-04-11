@@ -76,7 +76,7 @@ for m in range(len(pixel_size)):
     
     xdet_edges = xedges[::bins_per_pix[m]]  # [arcsecs]
     ydet_edges = yedges[::bins_per_pix[m]]  # [arcsecs]
-    err2 = np.zeros(realizations)
+    err2 = np.zeros(realizations,2)
     print(m)    
     
     for n in range(realizations):
@@ -99,10 +99,11 @@ for m in range(len(pixel_size)):
         # Centroid assumes x,y center of pixels, add half pixel to offset
         xc += pixel_size[m] / 2.0
         yc += pixel_size[m] / 2.0
-        err2[n] = np.sqrt((xc-mux)**2 + (yc-muy)**2)
+        err2[n,:] = (xc-mux), (yc-muy)
         print('\t' + str(n))
         
-    err[m,:] = [np.std(err2), np.mean(err2)]
+    err[m,0:1] = np.mean(err2,axis=0), 
+    err[m,2] = np.std(np.sqrt((np.mean(err2[0,:])-mux)**2 + (np.mean(err2[1,:])-muy)**2))
     #figure()
     #plt.imshow(detector, interpolation='none')
     #plt.colorbar()
