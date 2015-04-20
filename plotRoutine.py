@@ -47,7 +47,7 @@ def add_gaussian_noise(dimension, noise):
     return np.random.normal(loc=noise, scale=1.0, size=dimension**2).reshape(dimension, dimension)
     
     
-def fiber_mask(fiber_radius, n_bins, bin_size):
+def fiber_mask(fiber_radius, n_bins, bin_size, refl):
     """
     Returns centered circular fiber mask
     """
@@ -55,7 +55,7 @@ def fiber_mask(fiber_radius, n_bins, bin_size):
     r = fiber_radius / bin_size;
     # Check if bin size is even or odd
     x, y = np.ogrid[0:n_bins/2, 0:n_bins/2]
-    mask = (x*x + y*y >= r*r).astype(int)  # 1/4 of mask, must concatenate
+    mask = (x*x + y*y >= r*r).astype(int) + (x*x + y*y < r*r).astype(int)*refl # 1/4 of mask, must concatenate
     mask = np.column_stack((np.fliplr(mask), mask))  # 1/2 of mask
     mask = np.vstack((np.flipud(mask), mask))  # all of mask
     return mask
