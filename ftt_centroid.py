@@ -10,6 +10,7 @@ import numpy as np
 import plotRoutine
 from scipy.stats import norm
 from numpy import ma
+import pickle
 
 
 """
@@ -34,8 +35,8 @@ Detector and fiber properties
 """
 field = 5.0  # [arcsecs]
 #
-#pixel_size = np.array([1.0, 0.75, 0.5, 0.25, 0.2, 0.175, 0.15, 0.125, 0.1, 0.075, 0.05, 0.025])
-pixel_size = np.array([0.025])
+pixel_size = np.array([1.0, 0.75, 0.5, 0.25, 0.2, 0.175, 0.15, 0.125, 0.1, 0.075, 0.05, 0.025])
+#pixel_size = np.array([0.025])
 #
 n_pix = np.round(field / pixel_size)  # Pixels in ~5 arcsecond field
 n_bins = n_pix * 30.0  # Bins for putting photons on prior to detector binning
@@ -44,6 +45,7 @@ bins_per_pix = n_bins / n_pix  # Photon bins per detector pixel
 
 fwhm = 0.76  # fwhm of beam [arcsecs]
 fiber_radius = 0.45  # 1/e radius [arcsecs]
+refl = 0.005  # Reflectance off fiber head
 sigma = fwhm / 2.3458  # [arcsecs]
 mux = 0.0  # [arcsecs]
 muy = 0.0  # [arcsecs]
@@ -52,18 +54,18 @@ rn = 0.5  # read noise [electrons/pixel]
 dark = 0.001 * integration_time  # dark current [electrons/pixel]
 noise_level = rn+dark
 
-realizations = 1
+realizations = 50
 
 """
 Realizations
 """
-err = np.zeros((len(pixel_size), 2))
+err = np.zeros((len(pixel_size), 3))
 for m in range(len(pixel_size)):        
     """
     Fiber mask, binning parameters
     """
       # Grid to be binned into detector
-    mask = plotRoutine.fiber_mask(fiber_radius, n_bins[m], bin_size[m])
+    mask = plotRoutine.fiber_mask(fiber_radius, n_bins[m], bin_size[m], refl)
     lim = n_bins[m]/2.0 * bin_size[m]  # edge of bin grid in arcseconds
     
     # Pixel edges on detector
@@ -76,7 +78,7 @@ for m in range(len(pixel_size)):
     
     xdet_edges = xedges[::bins_per_pix[m]]  # [arcsecs]
     ydet_edges = yedges[::bins_per_pix[m]]  # [arcsecs]
-    err2 = np.zeros(realizations,2)
+    err2 = np.zeros((realizations,2))
     print(m)    
     
     for n in range(realizations):
@@ -102,11 +104,14 @@ for m in range(len(pixel_size)):
         err2[n,:] = (xc-mux), (yc-muy)
         print('\t' + str(n))
         
-    err[m,0:1] = np.mean(err2,axis=0), 
+    err[m,0:2] = np.mean(err2,axis=0)
     err[m,2] = np.std(np.sqrt((np.mean(err2[0,:])-mux)**2 + (np.mean(err2[1,:])-muy)**2))
     #figure()
     #plt.imshow(detector, interpolation='none')
     #plt.colorbar()
 
 figure()
-plt.plot(pixel_size, err[:,1])
+err_r = np.sqrt(err[:,0]**2+err[:,1]**2)
+plt.plot(pixel_size, err_r*1000.0,'k')
+pickleData = (err, pixel_size)
+pickle.dump(pickleData, open('refl.p', 'wb'))
