@@ -25,7 +25,7 @@ extinction = 0.5  # Extinction in magnitudes per airmass
 transmission = 0.523
 qe = 0.9
 fiber_rejection = 0.16
-integration_time = 0.01  # [seconds]
+integration_time = 0.005  # [seconds]
 
 
 #n_photons = 10000
@@ -35,7 +35,7 @@ Detector and fiber properties
 """
 field = 5.0  # [arcsecs]
 #
-pixel_size = np.array([1.0, 0.75, 0.5, 0.25, 0.2, 0.175, 0.15, 0.125, 0.1, 0.075, 0.05, 0.025])
+pixel_size = np.array([1.0, 0.75, 0.5, 0.25, 0.2, 0.175, 0.15, 0.125, 0.1, 0.075, 0.05])
 #pixel_size = np.array([0.025])
 #
 n_pix = np.round(field / pixel_size)  # Pixels in ~5 arcsecond field
@@ -45,7 +45,7 @@ bins_per_pix = n_bins / n_pix  # Photon bins per detector pixel
 
 fwhm = 0.76  # fwhm of beam [arcsecs]
 fiber_radius = 0.45  # 1/e radius [arcsecs]
-refl = 0.005  # Reflectance off fiber head
+refl = 0.000  # Reflectance off fiber head
 sigma = fwhm / 2.3458  # [arcsecs]
 mux = 0.0  # [arcsecs]
 muy = 0.0  # [arcsecs]
@@ -54,12 +54,12 @@ rn = 0.5  # read noise [electrons/pixel]
 dark = 0.001 * integration_time  # dark current [electrons/pixel]
 noise_level = rn+dark
 
-realizations = 50
+realizations = 150
 
 """
 Realizations
 """
-err = np.zeros((len(pixel_size), 3))
+err = np.zeros((len(pixel_size), 2))
 for m in range(len(pixel_size)):        
     """
     Fiber mask, binning parameters
@@ -104,14 +104,16 @@ for m in range(len(pixel_size)):
         err2[n,:] = (xc-mux), (yc-muy)
         print('\t' + str(n))
         
-    err[m,0:2] = np.mean(err2,axis=0)
-    err[m,2] = np.std(np.sqrt((np.mean(err2[0,:])-mux)**2 + (np.mean(err2[1,:])-muy)**2))
+    err[m, 0] = np.mean(np.sqrt((err2[:,0]-mux)**2 + (err2[:,1]-muy)**2))
+    err[m,1] = np.std(np.sqrt((np.mean(err2[:,0])-mux)**2 + (np.mean(err2[:,1])-muy)**2))
     #figure()
     #plt.imshow(detector, interpolation='none')
     #plt.colorbar()
 
 figure()
-err_r = np.sqrt(err[:,0]**2+err[:,1]**2)
-plt.plot(pixel_size, err_r*1000.0,'k')
+plt.plot(pixel_size, err[:,0]*1000.0, 'k')
+figure()
+plt.imshow(detector, interpolation='none', cmap='gray', extent=[-lim, lim,-lim,lim])
+plt.colorbar()
 pickleData = (err, pixel_size)
-pickle.dump(pickleData, open('refl.p', 'wb'))
+#pickle.dump(pickleData, open('refl222.p', 'wb'))
